@@ -1,31 +1,31 @@
 # keyballer-config
 
-日本語 | [English](README.en.md)
+English | [日本語](README.ja.md)
 
-[Keyballer](https://github.com/AkiraMisawa/keyballer) 用のキーボード設定です。
+Keyboard settings for [Keyballer](https://github.com/AkiraMisawa/keyballer).
 
-**書き込み：** https://akiramisawa.github.io/keyballer/?repo=AkiraMisawa/keyballer-config
+**Flash:** https://akiramisawa.github.io/keyballer/?repo=AkiraMisawa/keyballer-config
 
-| ファームウェア | 機種 | キーマップ |
+| Firmware | Keyboard | Keymap |
 | --- | --- | --- |
 | Keyball+ | `keyball/keyballplus` | `keymaps/am338` |
-| Keyball39 | `keyball/keyball39` | `keymaps/am338`（Keyball+ と共通） |
+| Keyball39 | `keyball/keyball39` | `keymaps/am338` (shared with Keyball+) |
 
-## キーマップ am338
+## The am338 keymap
 
-roBa（ZMK）のキーマップを移植したもので、Mac / Windows を自動で判定して切り替えます。
+A port of the roBa (ZMK) keymap. It detects Mac or Windows and switches on its own.
 
-- レイヤーは4枚：ベース、記号（Tab 長押し）、数字・カーソル（Space / Enter 長押し）、ファンクション（K・'・Esc 長押し。この間ボールはスクロール）
-- ベースの `,` `.` の位置が左右クリックで、`,` `.` `\` はコンボで入力
-- Mac：Q 長押しで Cmd、左下2・3番目はタップで英数／かな・長押しで Option、ボールのスクロールは反転
-- L3 のスクリーンショットキー：Mac は Shift+Cmd+4 / Shift+Cmd+3、Windows は Win+Shift+S
+- Four layers: base, symbols (hold Tab), numbers and cursor (hold Space or Enter), and function (hold K, ' or Esc; the ball scrolls while it is held)
+- Left and right click sit where `,` and `.` are on the base layer; `,` `.` `\` are typed with combos
+- On Mac: holding Q gives Cmd; the second and third left thumb-row keys type 英数 / かな (Eisu / Kana) on tap and act as Option when held; ball scrolling is reversed
+- Screenshot keys on layer 3: Shift+Cmd+4 / Shift+Cmd+3 on Mac, Win+Shift+S on Windows
 
-## 変更から書き込みまで
+## From change to flash
 
-1. `keymaps/am338` を編集して `main` に push する
-2. GitHub Actions がビルドし、数分で `firmware` ブランチに反映される
-3. 上の書き込みページを開き、「書き込む」を押してキーボードのリセットボタンを押す（左右それぞれ）
+1. Edit `keymaps/am338` and push to `main`
+2. GitHub Actions builds it; the `firmware` branch updates within a few minutes
+3. Open the flash page above, press "Flash", then press the reset button on the keyboard (once for each half)
 
-## ライセンス
+## License
 
-`keymaps/am338` は Keyball のファームウェア（GPL-2.0-or-later）をもとにしています。
+`keymaps/am338` is based on the Keyball firmware (GPL-2.0-or-later).
