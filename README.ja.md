@@ -4,7 +4,7 @@
 
 [Keyballer](https://github.com/AkiraMisawa/keyballer) 用のキーボード設定です。
 
-**書き込み：** https://akiramisawa.github.io/keyballer/?repo=AkiraMisawa/keyballer-config
+**書き込み：** https://akiramisawa.github.io/keyballer/?repo=AkiraMisawa/keyballer-config&lang=ja
 
 | ファームウェア | 機種 | キーマップ |
 | --- | --- | --- |
