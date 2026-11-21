@@ -1,0 +1,18 @@
+# Builds the firmware described by keyballer.json and publishes it on the
+# `firmware` branch for the Keyballer app.
+name: Build firmware
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: build-firmware
+  cancel-in-progress: true
+
+jobs:
+  build:
+    uses: AkiraMisawa/keyballer/.github/workflows/build-qmk.yml@main
+    permissions:
+      contents: write

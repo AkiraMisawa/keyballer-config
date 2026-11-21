@@ -1,0 +1,30 @@
+{
+  "firmware": "qmk",
+  "qmk": {
+    "version": "0.22.14"
+  },
+  "sources": [
+    {
+      "repo": "Yowkees/keyball",
+      "ref": "4664de991d14da34bd42e7031ac7406b6ccb02af",
+      "path": "qmk_firmware/keyboards/keyball",
+      "as": "keyball"
+    }
+  ],
+  "builds": [
+    {
+      "id": "keyballplus",
+      "name": "Keyball+",
+      "keyboard": "keyball/keyballplus",
+      "keymap": "am338",
+      "keymap_dir": "keymaps/am338"
+    },
+    {
+      "id": "keyball39",
+      "name": "Keyball39",
+      "keyboard": "keyball/keyball39",
+      "keymap": "am338",
+      "keymap_dir": "keymaps/am338"
+    }
+  ]
+}
