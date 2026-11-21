@@ -1,5 +1,7 @@
 # keyballer-config
 
+日本語 | [English](README.en.md)
+
 [Keyballer](https://github.com/AkiraMisawa/keyballer) 用のキーボード設定です。
 
 **書き込み：** https://akiramisawa.github.io/keyballer/?repo=AkiraMisawa/keyballer-config
