@@ -350,11 +350,42 @@ static uint32_t os_watch(uint32_t trigger_time, void *cb_arg)
   return OS_POLL_MS;
 }
 
+#endif
+
+// Trackball speeds set in Keyballer (KEYBALL_CPI_DEFAULT and
+// KEYBALL_SCROLL_DIV_DEFAULT in config.h) win after flashing. Keyball keeps
+// speeds saved with KBC_SAVE in EEPROM, and those would win over new
+// defaults. So a stamp of the defaults is kept in the user EEPROM area: when
+// a build brings different defaults, the saved speeds are cleared once and
+// the new defaults apply. Speeds saved on the keyboard afterwards stay until
+// the next build with different defaults. The first build with this block
+// clears them once too, since there is no stamp yet.
+#define KEYBALLER_DEFAULTS_STAMP \
+  (0x4B420000UL | ((uint32_t)(KEYBALL_CPI_DEFAULT / 100) << 8) | (uint32_t)KEYBALL_SCROLL_DIV_DEFAULT)
+
+static void apply_new_trackball_defaults(void)
+{
+  if (eeconfig_read_user() == KEYBALLER_DEFAULTS_STAMP)
+  {
+    return;
+  }
+  keyball_config_t c = {.raw = eeconfig_read_kb()};
+  c.cpi = 0; // 0 = KEYBALL_CPI_DEFAULT
+  c.sdiv = 0; // 0 = KEYBALL_SCROLL_DIV_DEFAULT
+  eeconfig_update_kb(c.raw);
+  keyball_set_cpi(0);
+  keyball_set_scroll_div(0);
+  eeconfig_update_user(KEYBALLER_DEFAULTS_STAMP);
+}
+
 void keyboard_post_init_user(void)
 {
+  // Keyball has read its saved speeds just before this runs.
+  apply_new_trackball_defaults();
+#if defined(OS_DETECTION_ENABLE) && defined(DEFERRED_EXEC_ENABLE)
   defer_exec(OS_POLL_MS, os_watch, NULL);
-}
 #endif
+}
 
 #ifdef OLED_ENABLE
 
