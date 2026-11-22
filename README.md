@@ -13,7 +13,7 @@ Keyboard settings for [Keyballer](https://github.com/AkiraMisawa/keyballer).
 
 ## The am338 keymap
 
-A port of the roBa (ZMK) keymap. It detects Mac or Windows and switches on its own.
+A port of the roBa (ZMK) keymap. It detects Mac or Windows and switches on its own, once the guess has held for a quarter of a second; the OLED shows the OS the keys follow (`?` until then, Linux and other hosts get the Windows keys).
 
 - Four layers: base, symbols (hold Tab), numbers and cursor (hold Space or Enter), and function (hold K, ' or Esc; the ball scrolls while it is held)
 - Left and right click sit where `,` and `.` are on the base layer; `,` `.` `\` are typed with combos
