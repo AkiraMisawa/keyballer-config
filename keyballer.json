@@ -49,6 +49,10 @@
         "SCRSHOT_FULL": {
           "en": "Full shot",
           "ja": "全画面スクショ"
+        },
+        "UK_TOGG": {
+          "en": "UK mode",
+          "ja": "UKモード"
         }
       }
     }

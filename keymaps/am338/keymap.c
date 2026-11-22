@@ -25,6 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //   L3 function  = roBa FUNCTION (roBa layer 5); the trackball scrolls here
 //
 // Keyball39 has no inner column, so roBa's inner-column keys are dropped.
+//
+// UK mode (UK_TOGG on L3): for a computer set to the UK keyboard layout
+// (Windows "United Kingdom", Linux "gb"). The keymap is written for the US
+// layout; in UK mode the six symbols that sit elsewhere on UK, @ " # ~ \ |,
+// are sent as the UK keys that type them. Off at power-up.
 
 #include QMK_KEYBOARD_H
 #include "quantum.h"
@@ -34,6 +39,7 @@ enum custom_keycodes
 {
   SCRSHOT_AREA = KEYBALL_SAFE_RANGE, // Win: Win+Shift+S, Mac: Shift+Cmd+4
   SCRSHOT_FULL,                      // Win: nothing,     Mac: Shift+Cmd+3
+  UK_TOGG,                           // UK mode on / off
 };
 
 // Left thumb row, keys 2 and 3. Mac: tap Eisu / Kana, hold Option.
@@ -43,6 +49,73 @@ enum custom_keycodes
 
 // Set once the host OS is detected. Windows layout unless a Mac is found.
 static bool is_mac = false;
+
+static bool uk_mode = false;
+
+// The UK layout key that types a US symbol, or KC_NO. Every other symbol in
+// this keymap is on the same key in both layouts.
+static uint16_t uk_key_for(uint16_t keycode)
+{
+  switch (keycode)
+  {
+  case KC_AT:
+    return S(KC_QUOT);
+  case KC_DQUO:
+    return S(KC_2);
+  case KC_HASH:
+    return KC_NUHS;
+  case KC_TILD:
+    return S(KC_NUHS);
+  case KC_BSLS: // also the backslash combo on the right hand
+    return KC_NUBS;
+  case KC_PIPE:
+    return S(KC_NUBS);
+  default:
+    return KC_NO;
+  }
+}
+
+// Sends a symbol the UK way while UK mode is on. Remembers which presses went
+// out that way, so each release matches its press even if the mode changes
+// in between.
+static bool process_uk_symbol(uint16_t keycode, keyrecord_t *record)
+{
+  static uint16_t sent_as_uk[4];
+  uint16_t uk = uk_key_for(keycode);
+
+  if (uk == KC_NO)
+  {
+    return true;
+  }
+  if (record->event.pressed)
+  {
+    if (!uk_mode)
+    {
+      return true;
+    }
+    for (uint8_t i = 0; i < 4; i++)
+    {
+      if (sent_as_uk[i] == KC_NO)
+      {
+        sent_as_uk[i] = keycode;
+        register_code16(uk);
+        return false;
+      }
+    }
+    tap_code16(uk); // more than four held at once: type it once
+    return false;
+  }
+  for (uint8_t i = 0; i < 4; i++)
+  {
+    if (sent_as_uk[i] == keycode)
+    {
+      sent_as_uk[i] = KC_NO;
+      unregister_code16(uk);
+      return false;
+    }
+  }
+  return true;
+}
 
 // clang-format off
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -75,7 +148,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     KC_LALT     , KC_F7   , KC_F8       , KC_F9   , KC_F10  ,                     KC_F9     , KC_F10   , KC_F11 , KC_F12   , A(KC_F4) ,
     KC_LCTL     , KC_F4   , KC_F5       , KC_F6   , KC_F11  ,                     CPI_D100  , SCRL_DVI , KC_F5  , SCRL_DVD , CPI_I100 ,
     SCRSHOT_FULL, KC_F1   , KC_F2       , KC_F3   , KC_F12  ,                  SCRSHOT_AREA , KC_BTN4  , KC_F2  , KC_APP   , KC_BTN5  ,
-    _______     , _______ , LCA(KC_DEL) , _______ , _______ , KC_ESC  ,   KC_DEL , KC_ENT    , _______  , _______ , _______  , _______
+    _______     , _______ , LCA(KC_DEL) , _______ , _______ , KC_ESC  ,   KC_DEL , KC_ENT    , _______  , _______ , _______  , UK_TOGG
   ),
 };
 // clang-format on
@@ -128,6 +201,11 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record)
 {
   // Remember what was pressed so the release matches even if the OS changes.
   static bool q_hold_is_cmd;
+
+  if (!process_uk_symbol(keycode, record))
+  {
+    return false;
+  }
 
   switch (keycode)
   {
@@ -200,6 +278,15 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record)
     }
     return false;
   }
+
+  case UK_TOGG:
+  {
+    if (record->event.pressed)
+    {
+      uk_mode = !uk_mode;
+    }
+    return false;
+  }
   }
   return true;
 }
@@ -250,18 +337,19 @@ void oledkit_render_info_user(void)
   {
   case OS_WINDOWS:
   {
-    oled_write_P(PSTR(" Win  "), false);
+    oled_write_P(PSTR(" Win"), false);
     break;
   }
   case OS_MACOS:
   {
-    oled_write_P(PSTR(" Mac  "), false);
+    oled_write_P(PSTR(" Mac"), false);
     break;
   }
   default:
-    oled_write_P(PSTR("NA  "), false);
+    oled_write_P(PSTR(" NA "), false);
     break;
   }
+  oled_write_P(uk_mode ? PSTR(" UK  ") : PSTR("     "), false);
   oled_write_P(PSTR("Layer:"), false);
   oled_write(get_u8_str(get_highest_layer(layer_state), ' '), false);
 }
