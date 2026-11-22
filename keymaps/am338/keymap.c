@@ -48,6 +48,10 @@ enum custom_keycodes
 #define TH_EISU LALT_T(KC_LNG2)
 #define TH_KANA LALT_T(KC_LNG1)
 
+// Layers where the trackball scrolls instead of moving the cursor, as bits
+// (1 << layer). Keyballer's keymap editor reads and changes this line.
+#define KEYBALLER_SCROLL_LAYERS (1 << 3)
+
 // The host OS the keys follow: Windows behaviour unless a Mac is found.
 // Set by os_watch below once QMK's guess has settled.
 static os_variant_t host_os = OS_UNSURE;
@@ -307,7 +311,7 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report)
 
 layer_state_t layer_state_set_user(layer_state_t state)
 {
-  keyball_set_scroll_mode(get_highest_layer(state) == 3);
+  keyball_set_scroll_mode((KEYBALLER_SCROLL_LAYERS & (1UL << get_highest_layer(state))) != 0);
 
   return state;
 }
