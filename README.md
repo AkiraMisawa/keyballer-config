@@ -19,6 +19,7 @@ A port of the roBa (ZMK) keymap. It detects Mac or Windows and switches on its o
 - Left and right click sit where `,` and `.` are on the base layer; `,` `.` `\` are typed with combos
 - On Mac: holding Q gives Cmd; the second and third left thumb-row keys type 英数 / かな (Eisu / Kana) on tap and act as Option when held; ball scrolling is reversed
 - Screenshot keys on layer 3: Shift+Cmd+4 / Shift+Cmd+3 on Mac, Win+Shift+S on Windows
+- UK mode: the bottom-right key on layer 3 turns it on and off (off at power-up; the OLED shows "UK" while it is on). For a computer set to the UK keyboard layout (Windows "United Kingdom", Linux "gb"): `@` `"` `#` `~` `\` `|` are sent so they come out as on the US layout
 
 ## From change to flash
 
