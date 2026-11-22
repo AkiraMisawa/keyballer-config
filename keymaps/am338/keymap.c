@@ -34,6 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include QMK_KEYBOARD_H
 #include "quantum.h"
 #include "os_detection.h"
+#include "usb_device_state.h"
 
 enum custom_keycodes
 {
@@ -47,7 +48,9 @@ enum custom_keycodes
 #define TH_EISU LALT_T(KC_LNG2)
 #define TH_KANA LALT_T(KC_LNG1)
 
-// Set once the host OS is detected. Windows layout unless a Mac is found.
+// The host OS the keys follow: Windows behaviour unless a Mac is found.
+// Set by os_watch below once QMK's guess has settled.
+static os_variant_t host_os = OS_UNSURE;
 static bool is_mac = false;
 
 static bool uk_mode = false;
@@ -310,16 +313,46 @@ layer_state_t layer_state_set_user(layer_state_t state)
 }
 
 #if defined(OS_DETECTION_ENABLE) && defined(DEFERRED_EXEC_ENABLE)
-static uint32_t os_detect_callback(uint32_t trigger_time, void *cb_arg)
+// QMK 0.22 rewrites its OS guess with every USB setup packet, so a guess read
+// once, early, can be half-made. Like newer QMK (quantum/os_detection.c,
+// OS_DETECTION_DEBOUNCE), follow the guess only while the host has the
+// keyboard configured and once neither the guess nor the USB state has
+// changed for OS_STABLE_MS. Keep watching, so a later, better guess is taken.
+#  define OS_POLL_MS 50
+#  define OS_STABLE_MS 250
+
+static bool usb_configured = false;
+static uint16_t usb_changed_at;
+
+void notify_usb_device_state_change_user(enum usb_device_state usb_device_state)
 {
+  usb_configured = (usb_device_state == USB_DEVICE_STATE_CONFIGURED);
+  usb_changed_at = timer_read();
+}
+
+static uint32_t os_watch(uint32_t trigger_time, void *cb_arg)
+{
+  static os_variant_t seen = OS_UNSURE;
+  static uint16_t seen_since;
   os_variant_t os = detected_host_os();
-  is_mac = (os == OS_MACOS || os == OS_IOS);
-  return 0;
+
+  if (os != seen)
+  {
+    seen = os;
+    seen_since = timer_read();
+  }
+  else if (usb_configured && os != OS_UNSURE && os != host_os &&
+           timer_elapsed(seen_since) >= OS_STABLE_MS && timer_elapsed(usb_changed_at) >= OS_STABLE_MS)
+  {
+    host_os = os;
+    is_mac = (os == OS_MACOS || os == OS_IOS);
+  }
+  return OS_POLL_MS;
 }
 
 void keyboard_post_init_user(void)
 {
-  defer_exec(100, os_detect_callback, NULL);
+  defer_exec(OS_POLL_MS, os_watch, NULL);
 }
 #endif
 
@@ -332,21 +365,24 @@ void oledkit_render_info_user(void)
   keyball_oled_render_keyinfo();
   keyball_oled_render_ballinfo();
 
+  // The OS the keys follow now, not QMK's raw guess.
   oled_write_P(PSTR("OS:"), false);
-  switch (detected_host_os())
+  switch (host_os)
   {
   case OS_WINDOWS:
-  {
     oled_write_P(PSTR(" Win"), false);
     break;
-  }
   case OS_MACOS:
-  {
     oled_write_P(PSTR(" Mac"), false);
     break;
-  }
+  case OS_IOS:
+    oled_write_P(PSTR(" iOS"), false);
+    break;
+  case OS_LINUX:
+    oled_write_P(PSTR(" Lnx"), false);
+    break;
   default:
-    oled_write_P(PSTR(" NA "), false);
+    oled_write_P(PSTR(" ?  "), false);
     break;
   }
   oled_write_P(uk_mode ? PSTR(" UK  ") : PSTR("     "), false);
