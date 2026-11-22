@@ -356,36 +356,97 @@ static uint32_t os_watch(uint32_t trigger_time, void *cb_arg)
 
 #endif
 
-// Trackball speeds set in Keyballer (KEYBALL_CPI_DEFAULT and
-// KEYBALL_SCROLL_DIV_DEFAULT in config.h) win after flashing. Keyball keeps
-// speeds saved with KBC_SAVE in EEPROM, and those would win over new
-// defaults. So a stamp of the defaults is kept in the user EEPROM area: when
-// a build brings different defaults, the saved speeds are cleared once and
-// the new defaults apply. Speeds saved on the keyboard afterwards stay until
-// the next build with different defaults. The first build with this block
-// clears them once too, since there is no stamp yet.
+// Settings made in Keyballer win after flashing: the trackball speeds
+// (KEYBALL_CPI_DEFAULT, KEYBALL_SCROLL_DIV_DEFAULT) and the LED settings
+// (RGBLIGHT_DEFAULT_*, KEYBALLER_LEDS_OFF) in config.h. Keyball and QMK keep
+// values changed on the keyboard in EEPROM (KBC_SAVE, the LED keys), and
+// those would win over new defaults. So a stamp of each group of defaults is
+// kept in the user EEPROM data block (EECONFIG_USER_DATA_SIZE in config.h):
+// when a build brings different defaults, that group's saved values are reset
+// to them once. Values changed on the keyboard afterwards stay until the next
+// build with different defaults. A board that has never had a stamp, or whose
+// stamp was in the user EEPROM word (before the LED settings), is reset once.
+typedef struct
+{
+  uint32_t trackball;
+  uint32_t leds;
+} keyballer_stamps_t;
+
+_Static_assert(sizeof(keyballer_stamps_t) == EECONFIG_USER_DATA_SIZE, "EECONFIG_USER_DATA_SIZE must hold the stamps");
+
 #define KEYBALLER_DEFAULTS_STAMP \
   (0x4B420000UL | ((uint32_t)(KEYBALL_CPI_DEFAULT / 100) << 8) | (uint32_t)KEYBALL_SCROLL_DIV_DEFAULT)
 
-static void apply_new_trackball_defaults(void)
+#ifdef RGBLIGHT_ENABLE
+// QMK's own defaults (quantum/rgblight/rgblight.c) where config.h sets none.
+#  ifndef RGBLIGHT_DEFAULT_MODE
+#    define RGBLIGHT_DEFAULT_MODE RGBLIGHT_MODE_STATIC_LIGHT
+#  endif
+#  ifndef RGBLIGHT_DEFAULT_HUE
+#    define RGBLIGHT_DEFAULT_HUE 0
+#  endif
+#  ifndef RGBLIGHT_DEFAULT_SAT
+#    define RGBLIGHT_DEFAULT_SAT UINT8_MAX
+#  endif
+#  ifndef RGBLIGHT_DEFAULT_VAL
+#    define RGBLIGHT_DEFAULT_VAL RGBLIGHT_LIMIT_VAL
+#  endif
+#  ifdef KEYBALLER_LEDS_OFF
+#    define KEYBALLER_LEDS_ON_AT_START 0UL
+#  else
+#    define KEYBALLER_LEDS_ON_AT_START 1UL
+#  endif
+// Mode numbers stay below 64, so bit 7 of the first byte says whether the
+// LEDs start on.
+#  define KEYBALLER_LED_STAMP                                                         \
+  ((uint32_t)(RGBLIGHT_DEFAULT_MODE) | (KEYBALLER_LEDS_ON_AT_START << 7) |            \
+   ((uint32_t)(RGBLIGHT_DEFAULT_HUE) << 8) | ((uint32_t)(RGBLIGHT_DEFAULT_SAT) << 16) | \
+   ((uint32_t)(RGBLIGHT_DEFAULT_VAL) << 24))
+#endif
+
+static void apply_new_defaults(void)
 {
-  if (eeconfig_read_user() == KEYBALLER_DEFAULTS_STAMP)
+  keyballer_stamps_t stamps;
+  eeconfig_read_user_datablock(&stamps);
+  bool changed = false;
+
+  if (stamps.trackball != KEYBALLER_DEFAULTS_STAMP)
   {
-    return;
+    keyball_config_t c = {.raw = eeconfig_read_kb()};
+    c.cpi = 0; // 0 = KEYBALL_CPI_DEFAULT
+    c.sdiv = 0; // 0 = KEYBALL_SCROLL_DIV_DEFAULT
+    eeconfig_update_kb(c.raw);
+    keyball_set_cpi(0);
+    keyball_set_scroll_div(0);
+    stamps.trackball = KEYBALLER_DEFAULTS_STAMP;
+    changed = true;
   }
-  keyball_config_t c = {.raw = eeconfig_read_kb()};
-  c.cpi = 0; // 0 = KEYBALL_CPI_DEFAULT
-  c.sdiv = 0; // 0 = KEYBALL_SCROLL_DIV_DEFAULT
-  eeconfig_update_kb(c.raw);
-  keyball_set_cpi(0);
-  keyball_set_scroll_div(0);
-  eeconfig_update_user(KEYBALLER_DEFAULTS_STAMP);
+
+#ifdef RGBLIGHT_ENABLE
+  if (stamps.leds != KEYBALLER_LED_STAMP)
+  {
+    // Writes the defaults to EEPROM, then shows them.
+    eeconfig_update_rgblight_default();
+    rgblight_reload_from_eeprom();
+#  ifdef KEYBALLER_LEDS_OFF
+    rgblight_disable();
+#  endif
+    stamps.leds = KEYBALLER_LED_STAMP;
+    changed = true;
+  }
+#endif
+
+  if (changed)
+  {
+    eeconfig_update_user_datablock(&stamps);
+  }
 }
 
 void keyboard_post_init_user(void)
 {
-  // Keyball has read its saved speeds just before this runs.
-  apply_new_trackball_defaults();
+  // Keyball has read its saved speeds, and QMK its LED settings, just before
+  // this runs.
+  apply_new_defaults();
 #if defined(OS_DETECTION_ENABLE) && defined(DEFERRED_EXEC_ENABLE)
   defer_exec(OS_POLL_MS, os_watch, NULL);
 #endif
