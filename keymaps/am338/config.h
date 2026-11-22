@@ -25,9 +25,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define KEYBALL_CPI_DEFAULT 700
 #define KEYBALL_SCROLL_DIV_DEFAULT 4
 
-// Keyballer's stamps of the defaults above and of the LED settings, which let
-// new defaults win after flashing (keymap.c, apply_new_defaults).
-#define EECONFIG_USER_DATA_SIZE 8
+// Keyballer's stamps of the defaults above and of the LED settings and
+// effects, which let new defaults win after flashing (keymap.c,
+// apply_new_defaults).
+#define EECONFIG_USER_DATA_SIZE 12
 
 // Tap-hold behaviour matching roBa (ZMK): 200ms tapping term, no quick-tap
 // auto-repeat, and per-key flavors set in keymap.c.

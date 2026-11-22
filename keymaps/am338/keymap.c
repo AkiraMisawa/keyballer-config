@@ -370,6 +370,10 @@ typedef struct
 {
   uint32_t trackball;
   uint32_t leds;
+  // Which effects are compiled in: RGB Lighting numbers its modes by them, so
+  // the same number means another effect, or a mode saved on the keyboard
+  // another variant, when they change.
+  uint32_t led_effects;
 } keyballer_stamps_t;
 
 _Static_assert(sizeof(keyballer_stamps_t) == EECONFIG_USER_DATA_SIZE, "EECONFIG_USER_DATA_SIZE must hold the stamps");
@@ -402,6 +406,61 @@ _Static_assert(sizeof(keyballer_stamps_t) == EECONFIG_USER_DATA_SIZE, "EECONFIG_
   ((uint32_t)(RGBLIGHT_DEFAULT_MODE) | (KEYBALLER_LEDS_ON_AT_START << 7) |            \
    ((uint32_t)(RGBLIGHT_DEFAULT_HUE) << 8) | ((uint32_t)(RGBLIGHT_DEFAULT_SAT) << 16) | \
    ((uint32_t)(RGBLIGHT_DEFAULT_VAL) << 24))
+// The effects that number RGB Lighting's modes (quantum/rgblight/rgblight_modes.h).
+#  ifdef RGBLIGHT_EFFECT_BREATHING
+#    define KEYBALLER_FX_0 (1UL << 0)
+#  else
+#    define KEYBALLER_FX_0 0UL
+#  endif
+#  ifdef RGBLIGHT_EFFECT_RAINBOW_MOOD
+#    define KEYBALLER_FX_1 (1UL << 1)
+#  else
+#    define KEYBALLER_FX_1 0UL
+#  endif
+#  ifdef RGBLIGHT_EFFECT_RAINBOW_SWIRL
+#    define KEYBALLER_FX_2 (1UL << 2)
+#  else
+#    define KEYBALLER_FX_2 0UL
+#  endif
+#  ifdef RGBLIGHT_EFFECT_SNAKE
+#    define KEYBALLER_FX_3 (1UL << 3)
+#  else
+#    define KEYBALLER_FX_3 0UL
+#  endif
+#  ifdef RGBLIGHT_EFFECT_KNIGHT
+#    define KEYBALLER_FX_4 (1UL << 4)
+#  else
+#    define KEYBALLER_FX_4 0UL
+#  endif
+#  ifdef RGBLIGHT_EFFECT_CHRISTMAS
+#    define KEYBALLER_FX_5 (1UL << 5)
+#  else
+#    define KEYBALLER_FX_5 0UL
+#  endif
+#  ifdef RGBLIGHT_EFFECT_STATIC_GRADIENT
+#    define KEYBALLER_FX_6 (1UL << 6)
+#  else
+#    define KEYBALLER_FX_6 0UL
+#  endif
+#  ifdef RGBLIGHT_EFFECT_RGB_TEST
+#    define KEYBALLER_FX_7 (1UL << 7)
+#  else
+#    define KEYBALLER_FX_7 0UL
+#  endif
+#  ifdef RGBLIGHT_EFFECT_ALTERNATING
+#    define KEYBALLER_FX_8 (1UL << 8)
+#  else
+#    define KEYBALLER_FX_8 0UL
+#  endif
+#  ifdef RGBLIGHT_EFFECT_TWINKLE
+#    define KEYBALLER_FX_9 (1UL << 9)
+#  else
+#    define KEYBALLER_FX_9 0UL
+#  endif
+// Never 0, so a zeroed block always differs.
+#  define KEYBALLER_LED_EFFECTS_STAMP                                                  \
+  (0x4C450000UL | KEYBALLER_FX_0 | KEYBALLER_FX_1 | KEYBALLER_FX_2 | KEYBALLER_FX_3 | \
+   KEYBALLER_FX_4 | KEYBALLER_FX_5 | KEYBALLER_FX_6 | KEYBALLER_FX_7 | KEYBALLER_FX_8 | KEYBALLER_FX_9)
 #endif
 
 static void apply_new_defaults(void)
@@ -423,15 +482,18 @@ static void apply_new_defaults(void)
   }
 
 #ifdef RGBLIGHT_ENABLE
-  if (stamps.leds != KEYBALLER_LED_STAMP)
+  if (stamps.leds != KEYBALLER_LED_STAMP || stamps.led_effects != KEYBALLER_LED_EFFECTS_STAMP)
   {
-    // Writes the defaults to EEPROM, then shows them.
+    // Writes the defaults to EEPROM (and to RAM), then shows them or turns
+    // the LEDs off.
     eeconfig_update_rgblight_default();
-    rgblight_reload_from_eeprom();
 #  ifdef KEYBALLER_LEDS_OFF
     rgblight_disable();
+#  else
+    rgblight_reload_from_eeprom();
 #  endif
     stamps.leds = KEYBALLER_LED_STAMP;
+    stamps.led_effects = KEYBALLER_LED_EFFECTS_STAMP;
     changed = true;
   }
 #endif
