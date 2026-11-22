@@ -17,14 +17,40 @@
       "name": "Keyball+",
       "keyboard": "keyball/keyballplus",
       "keymap": "am338",
-      "keymap_dir": "keymaps/am338"
+      "keymap_dir": "keymaps/am338",
+      "ball": "right"
     },
     {
       "id": "keyball39",
       "name": "Keyball39",
       "keyboard": "keyball/keyball39",
       "keymap": "am338",
-      "keymap_dir": "keymaps/am338"
+      "keymap_dir": "keymaps/am338",
+      "ball": "right"
     }
-  ]
+  ],
+  "views": {
+    "keymaps/am338": {
+      "layers": [
+        "Base",
+        "Symbol",
+        "Number",
+        "Function"
+      ],
+      "ball": {
+        "default": "cursor",
+        "3": "scroll"
+      },
+      "labels": {
+        "SCRSHOT_AREA": {
+          "en": "Area shot",
+          "ja": "範囲スクショ"
+        },
+        "SCRSHOT_FULL": {
+          "en": "Full shot",
+          "ja": "全画面スクショ"
+        }
+      }
+    }
+  }
 }
