@@ -267,7 +267,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   // base
   [0] = LAYOUT_universal(
     ALT_T(KC_Q) , KC_W    , KC_E    , KC_R          , KC_T          ,                                KC_Y    , KC_U          , KC_I        , KC_O    , KC_P            ,
-    CTL_T(KC_A) , KC_S    , KC_D    , KC_F          , KC_G          ,                                KC_H    , KC_J          , LT(3, KC_K) , KC_L    , LT(3, KC_QUOT)  ,
+    CTL_T(KC_A) , KC_S    , KC_D    , KC_F          , KC_G          ,                                KC_H    , KC_J          , LT(3, KC_K) , KC_L    , LCTL_T(KC_QUOT) ,
     SFT_T(KC_Z) , KC_X    , KC_C    , KC_V          , KC_B          ,                                KC_N    , KC_M          , KC_BTN1     , KC_BTN2 , RSFT_T(KC_SLSH) ,
     KC_LGUI     , TH_EISU , TH_KANA , LT(1, KC_TAB) , LT(2, KC_SPC) , LT(3, KC_ESC) ,      KC_BSPC , LT(2, KC_ENT) , _______ , _______     , _______ , RCTL_T(KC_MINS)
   ),
