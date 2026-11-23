@@ -30,6 +30,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // (Windows "United Kingdom", Linux "gb"). The keymap is written for the US
 // layout; in UK mode the six symbols that sit elsewhere on UK, @ " # ~ \ |,
 // are sent as the UK keys that type them. Off at power-up.
+//
+// JIS mode (JIS_TOGG on L3): for a computer that reads this keyboard as a
+// Japanese (JIS) one. Every symbol that sits elsewhere on JIS is sent as the
+// JIS key that types it, so the keys type what the US legends say. On by
+// itself on a Mac, off elsewhere; JIS_TOGG switches it until unplugged. UK and
+// JIS mode are never on together.
 
 #include QMK_KEYBOARD_H
 #include "quantum.h"
@@ -41,6 +47,7 @@ enum custom_keycodes
   SCRSHOT_AREA = KEYBALL_SAFE_RANGE, // Win: Win+Shift+S, Mac: Shift+Cmd+4
   SCRSHOT_FULL,                      // Win: nothing,     Mac: Shift+Cmd+3
   UK_TOGG,                           // UK mode on / off
+  JIS_TOGG,                          // JIS mode on / off
 };
 
 // Left thumb row, keys 2 and 3. Mac: tap Eisu / Kana, hold Option.
@@ -58,6 +65,125 @@ static os_variant_t host_os = OS_UNSURE;
 static bool is_mac = false;
 
 static bool uk_mode = false;
+
+// JIS mode: -1 follows the host (on for a Mac), 0 off, 1 on (set by JIS_TOGG).
+static int8_t jis_choice = -1;
+static bool jis_mode(void)
+{
+  return jis_choice < 0 ? is_mac : jis_choice == 1;
+}
+
+// The JIS key, with Shift or Option, that types the character a US key types
+// (`key`, with Shift when `shift`); 0 when it is the same key on JIS.
+static uint16_t jis_key_for(uint8_t key, bool shift)
+{
+  switch (key)
+  {
+  case KC_2:
+    return shift ? KC_LBRC : 0; // @
+  case KC_6:
+    return shift ? KC_EQL : 0; // ^
+  case KC_7:
+    return shift ? S(KC_6) : 0; // &
+  case KC_8:
+    return shift ? S(KC_QUOT) : 0; // *
+  case KC_9:
+    return shift ? S(KC_8) : 0; // (
+  case KC_0:
+    return shift ? S(KC_9) : 0; // )
+  case KC_MINS:
+    return shift ? S(KC_INT1) : 0; // _
+  case KC_EQL:
+    return shift ? S(KC_SCLN) : S(KC_MINS); // + =
+  case KC_LBRC:
+    return shift ? S(KC_RBRC) : KC_RBRC; // { [
+  case KC_RBRC:
+    return shift ? S(KC_NUHS) : KC_NUHS; // } ]
+  case KC_BSLS:
+    // | is Shift+Yen. \ is Option+Yen on a Mac (Yen alone types the yen
+    // sign there), and the Yen key itself on Windows.
+    return shift ? S(KC_INT3) : (is_mac ? A(KC_INT3) : KC_INT3);
+  case KC_SCLN:
+    return shift ? KC_QUOT : 0; // :
+  case KC_QUOT:
+    return shift ? S(KC_2) : S(KC_7); // " '
+  case KC_GRV:
+    return shift ? S(KC_EQL) : S(KC_LBRC); // ~ `
+  default:
+    return 0;
+  }
+}
+
+// Types a symbol the JIS way while JIS mode is on: on the press, the JIS key
+// with exactly the Shift it needs (whatever Shift is held), and nothing on the
+// release. Symbols typed with Ctrl, Alt or GUI held are shortcuts and are left
+// alone. Translated keys do not repeat while held.
+static bool process_jis_symbol(uint16_t keycode, keyrecord_t *record)
+{
+  static uint16_t sent_as_jis[4];
+  uint8_t key;
+  bool shift_in_key = false;
+
+  if (IS_QK_BASIC(keycode))
+  {
+    key = keycode;
+  }
+  else if (IS_QK_MODS(keycode) && QK_MODS_GET_MODS(keycode) == MOD_LSFT)
+  {
+    key = QK_MODS_GET_BASIC_KEYCODE(keycode);
+    shift_in_key = true;
+  }
+  else if ((IS_QK_LAYER_TAP(keycode) || IS_QK_MOD_TAP(keycode)) && record->tap.count > 0)
+  {
+    key = keycode & 0xFF; // the tap of a layer-tap or mod-tap
+  }
+  else
+  {
+    return true;
+  }
+
+  if (!record->event.pressed)
+  {
+    for (uint8_t i = 0; i < 4; i++)
+    {
+      if (sent_as_jis[i] == keycode)
+      {
+        sent_as_jis[i] = KC_NO;
+        return false; // typed on the press
+      }
+    }
+    return true;
+  }
+
+  const uint8_t mods = get_mods();
+  const uint8_t oneshot = get_oneshot_mods();
+  if (!jis_mode() || ((mods | oneshot) & (MOD_MASK_CTRL | MOD_MASK_ALT | MOD_MASK_GUI)))
+  {
+    return true;
+  }
+  const bool shift = shift_in_key || ((mods | oneshot) & MOD_MASK_SHIFT);
+  const uint16_t jis = jis_key_for(key, shift);
+  if (jis == 0)
+  {
+    return true;
+  }
+  for (uint8_t i = 0; i < 4; i++)
+  {
+    if (sent_as_jis[i] == KC_NO)
+    {
+      sent_as_jis[i] = keycode;
+      break;
+    }
+  }
+  del_mods(MOD_MASK_SHIFT);
+  if (oneshot & MOD_MASK_SHIFT)
+  {
+    del_oneshot_mods(MOD_MASK_SHIFT);
+  }
+  tap_code16(jis);
+  set_mods(mods);
+  return false;
+}
 
 // The UK layout key that types a US symbol, or KC_NO. Every other symbol in
 // this keymap is on the same key in both layouts.
@@ -155,7 +281,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     KC_LALT     , KC_F7   , KC_F8       , KC_F9   , KC_F10  ,                     KC_F9     , KC_F10   , KC_F11 , KC_F12   , A(KC_F4) ,
     KC_LCTL     , KC_F4   , KC_F5       , KC_F6   , KC_F11  ,                     CPI_D100  , SCRL_DVI , KC_F5  , SCRL_DVD , CPI_I100 ,
     SCRSHOT_FULL, KC_F1   , KC_F2       , KC_F3   , KC_F12  ,                  SCRSHOT_AREA , KC_BTN4  , KC_F2  , KC_APP   , KC_BTN5  ,
-    _______     , _______ , LCA(KC_DEL) , _______ , _______ , KC_ESC  ,   KC_DEL , KC_ENT    , _______  , _______ , _______  , UK_TOGG
+    _______     , _______ , LCA(KC_DEL) , _______ , _______ , KC_ESC  ,   KC_DEL , KC_ENT    , _______  , _______ , JIS_TOGG , UK_TOGG
   ),
 
   [4] = LAYOUT_universal(
@@ -218,7 +344,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record)
   // Remember what was pressed so the release matches even if the OS changes.
   static bool q_hold_is_cmd;
 
-  if (!process_uk_symbol(keycode, record))
+  if (!process_jis_symbol(keycode, record) || !process_uk_symbol(keycode, record))
   {
     return false;
   }
@@ -300,6 +426,23 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record)
     if (record->event.pressed)
     {
       uk_mode = !uk_mode;
+      if (uk_mode)
+      {
+        jis_choice = 0;
+      }
+    }
+    return false;
+  }
+
+  case JIS_TOGG:
+  {
+    if (record->event.pressed)
+    {
+      jis_choice = jis_mode() ? 0 : 1;
+      if (jis_choice == 1)
+      {
+        uk_mode = false;
+      }
     }
     return false;
   }
@@ -552,7 +695,7 @@ void oledkit_render_info_user(void)
     oled_write_P(PSTR(" ?  "), false);
     break;
   }
-  oled_write_P(uk_mode ? PSTR(" UK  ") : PSTR("     "), false);
+  oled_write_P(uk_mode ? PSTR(" UK  ") : jis_mode() ? PSTR(" JIS ") : PSTR("     "), false);
   oled_write_P(PSTR("Layer:"), false);
   oled_write(get_u8_str(get_highest_layer(layer_state), ' '), false);
 }
