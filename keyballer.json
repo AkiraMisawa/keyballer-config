@@ -36,7 +36,8 @@
         "Base",
         "Symbol",
         "Number",
-        "Function"
+        "Function",
+        "LED"
       ],
       "ball": {
         "default": "cursor",
