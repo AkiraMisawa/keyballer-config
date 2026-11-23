@@ -37,7 +37,8 @@
         "Symbol",
         "Number",
         "Function",
-        "LED"
+        "LED",
+        "Lang"
       ],
       "ball": {
         "default": "cursor",

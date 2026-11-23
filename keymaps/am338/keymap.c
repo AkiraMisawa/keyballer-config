@@ -164,6 +164,13 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     _______     , _______ , _______     , _______ , _______ ,                  _______      , _______  , _______ , _______  , _______  ,
     _______     , _______ , _______     , _______ , _______ , _______ ,   _______ , _______   , _______  , _______ , _______  , _______
   ),
+
+  [5] = LAYOUT_universal(
+    _______     , _______ , _______     , _______ , _______ ,                     _______   , UK_TOGG  , _______ , _______  , _______  ,
+    _______     , _______ , _______     , _______ , _______ ,                     _______   , _______  , _______ , _______  , _______  ,
+    _______     , _______ , _______     , _______ , _______ ,                  _______      , _______  , _______ , _______  , _______  ,
+    _______     , _______ , _______     , _______ , _______ , _______ ,   _______ , _______   , _______  , _______ , _______  , _______
+  ),
 };
 // clang-format on
 
@@ -173,12 +180,14 @@ const uint16_t PROGMEM combo_comma[] = {KC_M, KC_BTN1, COMBO_END};
 const uint16_t PROGMEM combo_dot[] = {KC_BTN1, KC_BTN2, COMBO_END};
 const uint16_t PROGMEM combo_bsls[] = {KC_BTN2, RSFT_T(KC_SLSH), COMBO_END};
 const uint16_t PROGMEM combo_4[] = {KC_D, KC_F, COMBO_END};
+const uint16_t PROGMEM combo_5[] = {KC_F, KC_G, COMBO_END};
 
 combo_t key_combos[] = {
     COMBO(combo_comma, KC_COMM),
     COMBO(combo_dot, KC_DOT),
     COMBO(combo_bsls, KC_BSLS),
     COMBO(combo_4, MO(4)),
+    COMBO(combo_5, MO(5)),
 };
 #endif
 
