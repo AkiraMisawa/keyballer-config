@@ -56,6 +56,10 @@
         "UK_TOGG": {
           "en": "UK mode",
           "ja": "UKモード"
+        },
+        "JIS_TOGG": {
+          "en": "JIS mode",
+          "ja": "JISモード"
         }
       }
     }
