@@ -1,0 +1,14 @@
+{
+  "id": "keyball39",
+  "name": "Keyball39",
+  "keyboard": "keyball/keyball39",
+  "keymap": "am338",
+  "file": "keyball39.hex",
+  "format": "hex",
+  "size": 24796,
+  "max_size": 28672,
+  "processor": "atmega32u4",
+  "bootloader": "caterina",
+  "split": true,
+  "view": "keyball39.view.json"
+}

@@ -1,0 +1,15 @@
+{
+  "id": "keyballplus",
+  "name": "Keyball+",
+  "keyboard": "keyball/keyballplus",
+  "keymap": "am338",
+  "file": "keyballplus.hex",
+  "format": "hex",
+  "size": 28266,
+  "max_size": 28672,
+  "leds": true,
+  "processor": "atmega32u4",
+  "bootloader": "caterina",
+  "split": true,
+  "view": "keyballplus.view.json"
+}

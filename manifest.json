@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "source": {
+    "repository": "AkiraMisawa/keyballer-config",
+    "sha": "dbcd6d340f749ef49c9c66152a6ad93c3f2c56e0",
+    "ref": "refs/heads/main"
+  },
+  "run": {
+    "id": 45096370293,
+    "url": "https://github.com/AkiraMisawa/keyballer-config/actions/runs/45096370293"
+  },
+  "built_at": "2026-11-23T01:47:53Z",
+  "builds": [
+    {
+      "id": "keyballplus",
+      "name": "Keyball+",
+      "keyboard": "keyball/keyballplus",
+      "keymap": "am338",
+      "file": "keyballplus.hex",
+      "format": "hex",
+      "size": 28266,
+      "max_size": 28672,
+      "leds": true,
+      "processor": "atmega32u4",
+      "bootloader": "caterina",
+      "split": true,
+      "view": "keyballplus.view.json",
+      "sha256": "efd5a7c6716e293d6b94c9a42aaf4b10a617dc682a46086339469475f857e021",
+      "view_sha256": "bb28787820e4a4b0536182d68723c9f2e911d6d44aea4f61306cc53fb1cfcce6"
+    },
+    {
+      "id": "keyball39",
+      "name": "Keyball39",
+      "keyboard": "keyball/keyball39",
+      "keymap": "am338",
+      "file": "keyball39.hex",
+      "format": "hex",
+      "size": 24796,
+      "max_size": 28672,
+      "processor": "atmega32u4",
+      "bootloader": "caterina",
+      "split": true,
+      "view": "keyball39.view.json",
+      "sha256": "18e275584199df0a8872f90c32190ecd1a1e5ee55a75c2a09c5a792bdf7b51a4",
+      "view_sha256": "c7b102852b3eb0236b9aeea1338ceb4f6a34724ae9f7b4d40d11adf1b5ce7c45"
+    }
+  ]
+}
