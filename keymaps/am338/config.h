@@ -49,3 +49,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #if defined(KEYBOARD_keyball_keyballplus) && !defined(KEYBALL_MODEL)
 #    define KEYBALL_MODEL 39
 #endif
+#define RGBLIGHT_EFFECT_RAINBOW_MOOD
+#define RGBLIGHT_EFFECT_STATIC_GRADIENT
