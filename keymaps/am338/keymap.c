@@ -66,6 +66,14 @@ static bool is_mac = false;
 
 static bool uk_mode = false;
 
+// What JIS mode sends for \ on a Mac: Option+Yen by default. A terminal that
+// takes Option as Meta (iTerm2, VS Code…) gets Esc and Yen from that instead;
+// set the Japanese input source's "¥キーで入力する文字" to \ and define
+// JIS_MAC_BACKSLASH KC_INT3 in config.h to send the Yen key alone.
+#ifndef JIS_MAC_BACKSLASH
+#  define JIS_MAC_BACKSLASH A(KC_INT3)
+#endif
+
 // JIS mode: -1 follows the host (on for a Mac), 0 off, 1 on (set by JIS_TOGG).
 static int8_t jis_choice = -1;
 static bool jis_mode(void)
@@ -102,7 +110,7 @@ static uint16_t jis_key_for(uint8_t key, bool shift)
   case KC_BSLS:
     // | is Shift+Yen. \ is Option+Yen on a Mac (Yen alone types the yen
     // sign there), and the Yen key itself on Windows.
-    return shift ? S(KC_INT3) : (is_mac ? A(KC_INT3) : KC_INT3);
+    return shift ? S(KC_INT3) : (is_mac ? JIS_MAC_BACKSLASH : KC_INT3);
   case KC_SCLN:
     return shift ? KC_QUOT : 0; // :
   case KC_QUOT:
@@ -116,8 +124,10 @@ static uint16_t jis_key_for(uint8_t key, bool shift)
 
 // Types a symbol the JIS way while JIS mode is on: on the press, the JIS key
 // with exactly the Shift it needs (whatever Shift is held), and nothing on the
-// release. Symbols typed with Ctrl, Alt or GUI held are shortcuts and are left
-// alone. Translated keys do not repeat while held.
+// release. Ctrl and GUI stay held, as hosts read shortcuts such as Cmd+[ and
+// Ctrl+[ through the JIS layout too. With Alt / Option held the key is sent as
+// it is: Option makes other characters on a Mac. Translated keys do not repeat
+// while held.
 static bool process_jis_symbol(uint16_t keycode, keyrecord_t *record)
 {
   static uint16_t sent_as_jis[4];
@@ -157,7 +167,7 @@ static bool process_jis_symbol(uint16_t keycode, keyrecord_t *record)
 
   const uint8_t mods = get_mods();
   const uint8_t oneshot = get_oneshot_mods();
-  if (!jis_mode() || ((mods | oneshot) & (MOD_MASK_CTRL | MOD_MASK_ALT | MOD_MASK_GUI)))
+  if (!jis_mode() || ((mods | oneshot) & MOD_MASK_ALT))
   {
     return true;
   }
@@ -181,7 +191,9 @@ static bool process_jis_symbol(uint16_t keycode, keyrecord_t *record)
     del_oneshot_mods(MOD_MASK_SHIFT);
   }
   tap_code16(jis);
+  // Shift held goes back on at once: the host saw it released for this key.
   set_mods(mods);
+  send_keyboard_report();
   return false;
 }
 
@@ -435,10 +447,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record)
     if (record->event.pressed)
     {
       uk_mode = !uk_mode;
-      if (uk_mode)
-      {
-        jis_choice = 0;
-      }
+      // JIS mode goes off with UK mode on, and follows the host again after.
+      jis_choice = uk_mode ? 0 : -1;
     }
     return false;
   }
